@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="google-site-verification" content="y8BGP1VNS8l7T7qyX6fVqRFe4rrJcA9pXe7WpKKKRww" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de Facturas</title>
+  <link rel="icon" href="img/logo.png" type="image/jpeg">
+  <meta name="description" content="Sistema de gestión de facturas con numeración automática y control mensual">
+  <meta property="og:title" content="Sistema de Gestión de Facturas">
+  <meta property="og:description" content="Sistema profesional para gestión y control de facturas">
+  <meta property="og:image" content="https://ejemplo.com/imagen-sistema-facturas.jpg">
+  <meta property="og:url" content="https://ejemplo.com/sistema-facturas">
+  <meta name="twitter:card" content="summary_large_image">
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-dark: #3a56d4;
+      --secondary: #6c757d;
+      --light: #f8f9fa;
+      --lighter: #e9ecef;
+      --border: #dee2e6;
+      --text: #212529;
+      --text-light: #6c757d;
+      --success: #198754;
+      --danger: #dc3545;
+      --warning: #fd7e14;
+      --info: #0dcaf0;
+      --shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      --radius: 12px;
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Poppins', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .auth-container {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    
+    .auth-logo {
+      font-size: 40px;
+      margin-bottom: 20px;
+      color: var(--primary);
+    }
+    
+    .auth-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+    }
+    
+    .auth-subtitle {
+      color: var(--text-light);
+      margin-bottom: 25px;
+    }
+    
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    input {
+      padding: 12px 15px;
+      font-size: 15px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: white;
+      transition: var(--transition);
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    }
+    
+    .btn {
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 500;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    
+    .btn-secondary {
+      background: var(--lighter);
+      color: var(--text);
+    }
+    
+    .btn-secondary:hover {
+      background: #dfe6f5;
+      transform: translateY(-2px);
+    }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .btn-success:hover {
+      background: #0f5132;
+      transform: translateY(-2px);
+    }
+    
+    .btn-warning {
+      background: var(--warning);
+      color: white;
+    }
+    
+    .btn-warning:hover {
+      background: #ca6702;
+      transform: translateY(-2px);
+    }
+    
+    .btn-info {
+      background: var(--info);
+      color: white;
+    }
+    
+    .btn-info:hover {
+      background: #0aa2c0;
+      transform: translateY(-2px);
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #bb2d3b;
+      transform: translateY(-2px);
+    }
+    
+    .btn-pendiente {
+      background: var(--danger);
+      color: white;
+    }
+    
+    .btn-cancelado {
+      background: var(--success);
+      color: white;
+      cursor: not-allowed;
+    }
+    
+    .attempts-warning {
+      color: var(--danger);
+      font-size: 14px;
+      margin-top: 10px;
+      display: none;
+    }
+    
+    .blocked-message {
+      text-align: center;
+      padding: 20px;
+      color: var(--danger);
+      display: none;
+    }
+    
+    .recovery-option {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    
+    .recovery-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .recovery-link:hover {
+      text-decoration: underline;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: none;
+      width: 100%;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    h1 i {
+      color: var(--primary);
+    }
+    
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    h2 i {
+      color: var(--primary);
+    }
+    
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .btn-sm {
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+    
+    .mes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .totals {
+      background: var(--lighter);
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      margin-top: 20px;
+    }
+    
+    .totals p {
+      margin: 6px 0;
+      font-size: 15px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .total-main {
+      font-weight: 600;
+      font-size: 17px;
+      color: var(--primary);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 14px;
+      box-shadow: 0 0 0 1px var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    th, td {
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 500;
+    }
+    
+    tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .factura-row:hover {
+      background: #f8f9fa;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: var(--text-light);
+    }
+    
+    .empty-state i {
+      font-size: 50px;
+      margin-bottom: 15px;
+      color: var(--primary);
+    }
+    
+    .empty-state p {
+      margin-top: 10px;
+      font-size: 16px;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .month-selector {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .month-badge {
+      background: var(--primary);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .export-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    .nro-info {
+      font-size: 13px;
+      color: var(--text-light);
+      margin-top: 5px;
+      font-style: italic;
+    }
+    
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: white;
+      border-radius: var(--radius);
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      transform: translateY(-20px);
+      transition: var(--transition);
+      position: relative;
+    }
+    
+    .modal-overlay.active .modal {
+      transform: translateY(0);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+    }
+    
+    .modal-close:hover {
+      color: var(--danger);
+    }
+    
+    .modal-body {
+      margin-bottom: 25px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    
+    .download-options {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .download-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    
+    .download-option:hover {
+      background: var(--lighter);
+      border-color: var(--primary);
+    }
+    
+    .download-option i {
+      font-size: 24px;
+      color: var(--primary);
+    }
+    
+    .download-info {
+      flex: 1;
+    }
+    
+    .download-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .download-desc {
+      font-size: 13px;
+      color: var(--text-light);
+    }
+    
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .mes-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+      
+      .actions {
+        flex-wrap: wrap;
+      }
+      
+      .export-buttons {
+        flex-direction: column;
+      }
+      
+      .modal {
+        width: 95%;
+        padding: 20px;
+      }
+      
+      /* Extra para pantallas muy pequeñas (teléfonos de 360px - 400px) */
+      @media (max-width: 420px) {
+        body {
+          padding: 10px;
+        }
+
+        header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          text-align: left;
+        }
+
+        .btn {
+          font-size: 15px;
+          padding: 12px;
+        }
+
+        th, td {
+          padding: 10px;
+          font-size: 13px;
+        }
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Pantalla de autenticación -->
+  <div class="auth-container" id="auth-container">
+    <div class="auth-logo">
+      <i class="fas fa-file-invoice-dollar"></i>
+    </div>
+    <h1 class="auth-title">Sistema de Gestión de Facturas</h1>
+    <p class="auth-subtitle">Ingrese el código de acceso para continuar</p>
+    
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="password"><i class="fas fa-lock"></i> Código de acceso</label>
+        <input type="password" id="password" placeholder="Ingrese el código de acceso" autocomplete="off">
+      </div>
+      
+      <button class="btn btn-primary" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> Ingresar
+      </button>
+      
+      <div class="attempts-warning" id="attempts-warning">
+        <i class="fas fa-exclamation-triangle"></i> 
+        <span id="attempts-count">2</span> intentos restantes antes del bloqueo
+      </div>
+    </div>
+    
+    
+  </div>
+  
+  <!-- Mensaje de bloqueo -->
+  <div class="auth-container blocked-message" id="blocked-message">
+    <div class="auth-logo">
+      <i class="fas fa-ban"></i>
+    </div>
+    <h1 class="auth-title">Acceso Bloqueado</h1>
+    <p class="auth-subtitle">Ha excedido el número máximo de intentos</p>
+    <p>Por favor, póngase en contacto con el administrador del sistema.</p>
+  </div>
+
+  <!-- Contenido principal (oculto inicialmente) -->
+  <div class="container" id="main-container">
+    <header>
+      <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Gestión de Facturas</h1>
+      <button class="btn btn-secondary" id="logoutBtn">
+        <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+      </button>
+    </header>
+
+    <div class="card">
+      <h2><i class="fas fa-plus-circle"></i> Nueva Factura</h2>
+      
+      <div class="month-selector">
+        <div class="form-group" style="max-width: 250px;">
+          <label for="mes"><i class="fas fa-calendar-alt"></i> Mes de facturación</label>
+          <input type="month" id="mes" required />
+        </div>
+        <div id="selected-month" class="month-badge hidden">
+          <i class="fas fa-calendar-check"></i> <span id="selected-month-text"></span>
+        </div>
+      </div>
+      
+      <div id="factura-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="nro"><i class="fas fa-hashtag"></i> Número de orden</label>
+            <input id="nro" type="text" readonly />
+            <div class="nro-info">Se genera automáticamente</div>
+          </div>
+          <div class="form-group">
+            <label for="empresa"><i class="fas fa-building"></i> Empresa</label>
+            <input id="empresa" type="text" oninput="validarEmpresa(this)" />
+            <div class="nro-info">Solo letras y espacios</div>
+          </div>
+          <div class="form-group">
+            <label for="fecha"><i class="fas fa-calendar-day"></i> Fecha de factura</label>
+            <input id="fecha" type="date" />
+          </div>
+          <div class="form-group">
+            <label for="nroFactura"><i class="fas fa-file-alt"></i> Número de factura</label>
+            <input id="nroFactura" type="text" oninput="validarNumeroFactura(this)" />
+            <div class="nro-info">Solo números</div>
+          </div>
+          <div class="form-group">
+            <label for="monto"><i class="fas fa-money-bill-wave"></i> Monto (Bs)</label>
+            <input id="monto" type="number" step="0.01" />
+          </div>
+        </div>
+        <button class="btn btn-primary" id="addBtn">
+          <i class="fas fa-plus"></i> Agregar Factura
+        </button>
+        <button class="btn btn-info hidden" id="updateBtn">
+          <i class="fas fa-save"></i> Actualizar Factura
+        </button>
+        <button class="btn btn-secondary hidden" id="cancelEditBtn">
+          <i class="fas fa-times"></i> Cancelar
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><i class="fas fa-list-alt"></i> Resumen por Mes</h2>
+      <div id="meses"></div>
+      
+      <div id="empty-state" class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h3>No hay facturas registradas</h3>
+        <p>Agrega tu primera factura usando el formulario superior</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para eliminar -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-trash-alt"></i> Confirmar eliminación</h3>
+        <button class="modal-close" onclick="closeModal('deleteModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="deleteModalText">¿Estás seguro de que deseas eliminar esta factura?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancelar</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para descargar -->
+  <div class="modal-overlay" id="downloadModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-download"></i> Descargar facturas</h3>
+        <button class="modal-close" onclick="closeModal('downloadModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="downloadModalText">Selecciona el formato para descargar las facturas de <strong id="downloadMonth"></strong>:</p>
+        <div class="download-options">
+          <div class="download-option" onclick="exportToPDF(selectedMonthForDownload)">
+            <i class="fas fa-file-pdf"></i>
+            <div class="download-info">
+              <div class="download-title">Documento PDF</div>
+              <div class="download-desc">Ideal para imprimir o compartir</div>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+          <div class="download-option" onclick="exportToWord(selectedMonthForDownload)">
+            <i class="fas fa-file-word"></i>
+            <div class="download-info">
+              <div class="download-title">Documento Word</div>
+              <div class="download-desc">Para editar o modificar</div>
+            </div>
+            <i class="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('downloadModal')">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para confirmar cancelación -->
+  <div class="modal-overlay" id="cancelacionModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title"><i class="fas fa-check-circle"></i> Confirmar cancelación</h3>
+        <button class="modal-close" onclick="closeModal('cancelacionModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p id="cancelacionModalText">¿Estás seguro de que este mes ha sido cancelado?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('cancelacionModal')">Cancelar</button>
+        <button class="btn btn-success" id="confirmCancelacionBtn">Sí, confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Inicializar jsPDF
+    const { jsPDF } = window.jspdf;
+    
+    const STORAGE_KEY = 'facturas-sistema-auto-nro';
+    const AUTH_KEY = 'facturas-auth';
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    let selectedMonth = '';
+    let selectedMonthForDownload = '';
+    let deleteCallback = null;
+    let cancelacionCallback = null;
+    let editingFactura = null; // Para almacenar la factura que se está editando
+    let attempts = 3; // Intentos de contraseña permitidos
+
+    // Verificar si ya está autenticado
+    function checkAuth() {
+      const auth = localStorage.getItem(AUTH_KEY);
+      if (auth === 'authenticated') {
+        showMainContent();
+      }
+    }
+
+    // Mostrar contenido principal
+    function showMainContent() {
+      document.getElementById('auth-container').style.display = 'none';
+      document.getElementById('main-container').style.display = 'block';
+      document.getElementById('blocked-message').style.display = 'none';
+    }
+
+    // Función de autenticación
+    function authenticate() {
+      const password = document.getElementById('password').value;
+      const correctPassword = 'Churqui123';
+      
+      if (password === correctPassword) {
+        // Contraseña correcta
+        localStorage.setItem(AUTH_KEY, 'authenticated');
+        showMainContent();
+        return true;
+      } else {
+        // Contraseña incorrecta
+        attempts--;
+        
+        if (attempts <= 0) {
+          // Bloquear acceso
+          document.getElementById('auth-container').style.display = 'none';
+          document.getElementById('blocked-message').style.display = 'block';
+          document.getElementById('main-container').style.display = 'none';
+        } else {
+          // Mostrar advertencia
+          const warning = document.getElementById('attempts-warning');
+          const count = document.getElementById('attempts-count');
+          count.textContent = attempts;
+          warning.style.display = 'block';
+          
+          // Efecto de sacudida
+          document.getElementById('password').style.animation = 'shake 0.5s';
+          setTimeout(() => {
+            document.getElementById('password').style.animation = '';
+          }, 500);
+        }
+        
+        return false;
+      }
+    }
+
+    // Cerrar sesión
+    function logout() {
+      localStorage.removeItem(AUTH_KEY);
+      document.getElementById('auth-container').style.display = 'flex';
+      document.getElementById('main-container').style.display = 'none';
+      document.getElementById('password').value = '';
+      attempts = 3;
+      document.getElementById('attempts-warning').style.display = 'none';
+
+      // Redirigir a Google
+      window.location.href = "https://www.google.com";
+    }
+
+    // Función para formatear el mes en español (ej: "2025-09" -> "Septiembre - 2025")
+    function formatearMes(mes) {
+      const [anio, mesNum] = mes.split('-');
+      const meses = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ];
+      return `${meses[parseInt(mesNum) - 1]} - ${anio}`;
+    }
+
+    // Función para obtener el siguiente número de orden para un mes
+    function obtenerSiguienteNumero(mes) {
+      if (!data[mes] || data[mes].length === 0) {
+        return 1;
+      }
+      
+      // Encontrar el máximo número de orden actual
+      const maxNro = Math.max(...data[mes].map(factura => {
+        // Si el número de orden es un string, convertirlo a número
+        const nro = parseInt(factura.nro);
+        return isNaN(nro) ? 0 : nro;
+      }));
+      
+      return maxNro + 1;
+    }
+
+    // Función para renumerar las facturas de un mes (empezando desde 1)
+    function renumerarFacturas(mes) {
+      if (!data[mes] || data[mes].length === 0) return;
+      
+      // Ordenar facturas por timestamp (fecha de creación)
+      data[mes].sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Renumerar secuencialmente desde 1
+      data[mes].forEach((factura, index) => {
+        factura.nro = (index + 1).toString();
+      });
+      
+      saveData();
+    }
+
+    function saveData() { 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); 
+    }
+    
+    function parseAmount(value) { 
+      const amount = parseFloat(value); 
+      return isFinite(amount) ? amount : 0; 
+    }
+    
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('es-ES', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    // Funciones para modales
+    function openModal(modalId) {
+      document.getElementById(modalId).classList.add('active');
+    }
+    
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+    
+    function showDeleteModal(mes, index, isMonth = false) {
+      const nombreMes = formatearMes(mes);
+      const modalText = isMonth 
+        ? `¿Estás seguro de que deseas eliminar todas las facturas de ${nombreMes}? Esta acción no se puede deshacer.`
+        : `¿Estás seguro de que deseas eliminar la factura #${data[mes][index].nro} de ${nombreMes}?`;
+      
+      document.getElementById('deleteModalText').textContent = modalText;
+      
+      deleteCallback = () => {
+        if (isMonth) {
+          delete data[mes];
+        } else {
+          data[mes].splice(index, 1);
+          // Renumerar las facturas restantes
+          renumerarFacturas(mes);
+          // Si no quedan facturas, eliminar el mes
+          if (data[mes].length === 0) {
+            delete data[mes];
+          }
+        }
+        saveData();
+        renderMeses();
+        // Actualizar el número de orden después de eliminar
+        actualizarNumeroOrden();
+        closeModal('deleteModal');
+      };
+      
+      document.getElementById('confirmDeleteBtn').onclick = deleteCallback;
+      openModal('deleteModal');
+    }
+    
+    function showDownloadModal(mes) {
+      selectedMonthForDownload = mes;
+      const nombreMes = formatearMes(mes);
+      document.getElementById('downloadMonth').textContent = nombreMes;
+      openModal('downloadModal');
+    }
+
+    // Función para mostrar modal de confirmación de cancelación
+    function showCancelacionModal(mes) {
+      const nombreMes = formatearMes(mes);
+      const modalText = `¿Estás seguro de que el mes ${nombreMes} ha sido cancelado?`;
+      
+      document.getElementById('cancelacionModalText').textContent = modalText;
+      
+      cancelacionCallback = () => {
+        // Marcar el mes como cancelado
+        if (!data[mes]) data[mes] = [];
+        data[mes].cancelado = true;
+        saveData();
+        renderMeses();
+        closeModal('cancelacionModal');
+      };
+      
+      document.getElementById('confirmCancelacionBtn').onclick = cancelacionCallback;
+      openModal('cancelacionModal');
+    }
+
+    // Función para editar una factura
+    function editFactura(mes, index) {
+      const factura = data[mes][index];
+      editingFactura = { mes, index, factura: {...factura} };
+      
+      // Llenar el formulario con los datos de la factura
+      document.getElementById('nro').value = factura.nro;
+      document.getElementById('empresa').value = factura.empresa || '';
+      document.getElementById('fecha').value = factura.fecha || '';
+      document.getElementById('nroFactura').value = factura.nroFactura || '';
+      document.getElementById('monto').value = factura.monto || '';
+      
+      // Cambiar a modo edición
+      document.getElementById('addBtn').classList.add('hidden');
+      document.getElementById('updateBtn').classList.remove('hidden');
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+      
+      // Deshabilitar el cambio de mes mientras se edita
+      document.getElementById('mes').disabled = true;
+    }
+
+    // Función para cancelar la edición
+    function cancelEdit() {
+      editingFactura = null;
+      
+      // Restablecer el formulario
+      document.getElementById('empresa').value = '';
+      document.getElementById('fecha').value = '';
+      document.getElementById('nroFactura').value = '';
+      document.getElementById('monto').value = '';
+      
+      // Volver a modo normal
+      document.getElementById('addBtn').classList.remove('hidden');
+      document.getElementById('updateBtn').classList.add('hidden');
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      
+      // Habilitar el cambio de mes
+      document.getElementById('mes').disabled = false;
+      
+      // Actualizar el número de orden
+      actualizarNumeroOrden();
+    }
+
+    // Función para actualizar una factura
+    function updateFactura() {
+      if (!editingFactura) return;
+      
+      const monto = parseAmount(document.getElementById('monto').value);
+      if (monto <= 0) {
+        alert('Por favor, ingresa un monto válido');
+        return;
+      }
+      
+      // Actualizar los datos de la factura
+      data[editingFactura.mes][editingFactura.index] = {
+        nro: document.getElementById('nro').value,
+        empresa: document.getElementById('empresa').value,
+        fecha: document.getElementById('fecha').value,
+        nroFactura: document.getElementById('nroFactura').value,
+        monto: monto,
+        timestamp: editingFactura.factura.timestamp // Mantener el timestamp original
+      };
+      
+      saveData();
+      renderMeses();
+      cancelEdit(); // Volver al modo normal
+    }
+
+    // Validar campo empresa (solo letras y espacios)
+    function validarEmpresa(input) {
+      input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+    }
+
+    // Validar campo número de factura (solo números)
+    function validarNumeroFactura(input) {
+      input.value = input.value.replace(/[^0-9]/g, '');
+    }
+
+    // Establecer el mes seleccionado
+    document.getElementById('mes').addEventListener('change', function(e) {
+      selectedMonth = e.target.value;
+      const formattedMonth = formatearMes(selectedMonth);
+      document.getElementById('selected-month-text').textContent = formattedMonth;
+      document.getElementById('selected-month').classList.remove('hidden');
+      
+      // Si es un mes nuevo, inicializar array vacío
+      if (selectedMonth && !data[selectedMonth]) {
+        data[selectedMonth] = [];
+      }
+      
+      // Actualizar el número de orden automático
+      actualizarNumeroOrden();
+    });
+
+    // Función para actualizar el número de orden en el formulario
+    function actualizarNumeroOrden() {
+      if (selectedMonth) {
+        const siguienteNro = obtenerSiguienteNumero(selectedMonth);
+        document.getElementById('nro').value = siguienteNro;
+      } else {
+        document.getElementById('nro').value = '';
+      }
+    }
+
+    function addFactura() {
+      if (!selectedMonth) {
+        alert('Por favor, selecciona un mes primero');
+        return;
+      }
+      
+      const monto = parseAmount(document.getElementById('monto').value);
+      if (monto <= 0) {
+        alert('Por favor, ingresa un monto válido');
+        return;
+      }
+      
+      // Validar campos
+      const empresa = document.getElementById('empresa').value.trim();
+      const nroFactura = document.getElementById('nroFactura').value.trim();
+      
+      if (!empresa) {
+        alert('Por favor, ingresa el nombre de la empresa');
+        return;
+      }
+      
+      if (!nroFactura) {
+        alert('Por favor, ingresa el número de factura');
+        return;
+      }
+      
+      // Obtener el número de orden automático
+      const nroOrden = document.getElementById('nro').value;
+      
+      const factura = {
+        nro: nroOrden,
+        empresa: empresa,
+        fecha: document.getElementById('fecha').value,
+        nroFactura: nroFactura,
+        monto: monto,
+        timestamp: Date.now()
+      };
+      
+      // Asegurarse de que el array para el mes existe
+      if (!data[selectedMonth]) {
+        data[selectedMonth] = [];
+      }
+      
+      // Verificar que no exceda el límite de 100 facturas por mes
+      if (data[selectedMonth].length >= 100) {
+        alert('Se ha alcanzado el límite máximo de 100 facturas por mes');
+        return;
+      }
+      
+      data[selectedMonth].push(factura);
+      saveData();
+      renderMeses();
+      
+      // Limpiar el formulario (excepto el mes)
+      document.getElementById('empresa').value = '';
+      document.getElementById('fecha').value = '';
+      document.getElementById('nroFactura').value = '';
+      document.getElementById('monto').value = '';
+      
+      // Actualizar el número de orden para la próxima factura
+      actualizarNumeroOrden();
+    }
+
+    function calcTotales(facturas) {
+      const subtotal = facturas.reduce((sum, factura) => sum + factura.monto, 0);
+      // Calcular el 6% sobre el total (multiplicando por 0.06)
+      const seisPorciento = subtotal * 0.06;
+      
+      return {
+        subtotal: subtotal,
+        seisPorciento: seisPorciento
+      };
+    }
+
+    function exportToPDF(mes) {
+      const facturas = data[mes];
+      if (!facturas || facturas.length === 0) return;
+      
+      const doc = new jsPDF();
+      const totales = calcTotales(facturas);
+      const nombreMes = formatearMes(mes);
+      
+      // Título
+      doc.setFontSize(18);
+      doc.text(`Facturas del mes: ${nombreMes}`, 14, 15);
+      
+      // Tabla de facturas
+      const tableColumn = ["Nro", "Empresa", "Fecha", "Nro Factura", "Monto (Bs)"];
+      const tableRows = [];
+      
+      // Ordenar por número de orden
+      const facturasOrdenadas = [...facturas].sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+      
+      facturasOrdenadas.forEach(factura => {
+        const facturaData = [
+          factura.nro || '-',
+          factura.empresa || '-',
+          factura.fecha || '-',
+          factura.nroFactura || '-',
+          formatCurrency(factura.monto)
+        ];
+        tableRows.push(facturaData);
+      });
+      
+      // Añadir tabla
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 25,
+        theme: 'grid',
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [67, 97, 238] }
+      });
+      
+      // Añadir totales
+      const lastCell = doc.autoTable.previous.finalY;
+      doc.setFontSize(12);
+      doc.text(`Subtotal: Bs ${formatCurrency(totales.subtotal)}`, 14, lastCell + 15);
+      doc.text(`6% sobre el total: Bs ${formatCurrency(totales.seisPorciento)}`, 14, lastCell + 25);
+      
+      // Guardar PDF
+      doc.save(`facturas_${nombreMes.replace(' - ', '_')}.pdf`);
+      closeModal('downloadModal');
+    }
+
+    function exportToWord(mes) {
+      const facturas = data[mes];
+      if (!facturas || facturas.length === 0) return;
+      
+      const totales = calcTotales(facturas);
+      const nombreMes = formatearMes(mes);
+      
+      let tableHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+              xmlns:w="urn:schemas-microsoft-com:office:word" 
+              xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="utf-8">
+          <title>Facturas ${nombreMes}</title>
+        </head>
+        <body>
+          <h1>Facturas del mes: ${nombreMes}</h1>
+          <table border="1">
+            <tr>
+              <th>Nro</th>
+              <th>Empresa</th>
+              <th>Fecha</th>
+              <th>Nro Factura</th>
+              <th>Monto (Bs)</th>
+            </tr>
+      `;
+      
+      // Ordenar por número de orden
+      const facturasOrdenadas = [...facturas].sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+      
+      facturasOrdenadas.forEach(factura => {
+        tableHTML += `
+          <tr>
+            <td>${factura.nro || '-'}</td>
+            <td>${factura.empresa || '-'}</td>
+            <td>${factura.fecha || '-'}</td>
+            <td>${factura.nroFactura || '-'}</td>
+            <td>${formatCurrency(factura.monto)}</td>
+          </tr>
+        `;
+      });
+      
+      tableHTML += `
+          </table>
+          <p><strong>Subtotal:</strong> Bs ${formatCurrency(totales.subtotal)}</p>
+          <p><strong>6% sobre el total:</strong> Bs ${formatCurrency(totales.seisPorciento)}</p>
+        </body>
+        </html>
+      `;
+      
+      // Crear blob y descargar
+      const blob = new Blob([tableHTML], { type: 'application/msword' });
+      const link = document.createElement('a');
+      
+      link.href = URL.createObjectURL(blob);
+      link.download = `facturas_${nombreMes.replace(' - ', '_')}.doc`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      closeModal('downloadModal');
+    }
+
+    function renderMeses() {
+      const contenedor = document.getElementById('meses');
+      const emptyState = document.getElementById('empty-state');
+      
+      // Mostrar estado vacío si no hay datos
+      if (Object.keys(data).length === 0) {
+        emptyState.classList.remove('hidden');
+        contenedor.innerHTML = '';
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      contenedor.innerHTML = '';
+      
+      // Ordenar meses de más reciente a más antiguo
+      Object.keys(data).sort().reverse().forEach(mes => {
+        if (!data[mes] || data[mes].length === 0) return;
+        
+        const totales = calcTotales(data[mes]);
+        const nombreMes = formatearMes(mes);
+        const estaCancelado = data[mes].cancelado || false;
+        const div = document.createElement('div');
+        div.className = 'mes-resumen card';
+        div.innerHTML = `
+          <div class="mes-header">
+            <h3>${nombreMes}</h3>
+            <div class="actions">
+              ${estaCancelado ? 
+                `<button class="btn btn-cancelado btn-sm" disabled>
+                  <i class="fas fa-check-circle"></i> Cancelado
+                </button>` : 
+                `<button class="btn btn-pendiente btn-sm" onclick="showCancelacionModal('${mes}')">
+                  <i class="fas fa-money-bill-wave"></i> Pendiente
+                </button>`
+              }
+              <button class="btn btn-secondary btn-sm" onclick="toggleFacturas('${mes}')">
+                <i class="fas fa-list"></i> Ver Detalles
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${mes}', null, true)">
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </div>
+          </div>
+          <div class="totals">
+            <p><span>Subtotal:</span> <span>Bs ${formatCurrency(totales.subtotal)}</span></p>
+            <p><span>6% sobre el total:</span> <span>Bs ${formatCurrency(totales.seisPorciento)}</span></p>
+          </div>
+          <div class="export-buttons">
+            <button class="btn btn-success btn-sm" onclick="showDownloadModal('${mes}')">
+              <i class="fas fa-download"></i> Descargar
+            </button>
+          </div>
+          <div id="facturas-${mes}" class="hidden"></div>
+        `;
+        contenedor.appendChild(div);
+      });
+      
+      // Actualizar el número de orden después de renderizar
+      actualizarNumeroOrden();
+    }
+
+    function toggleFacturas(mes) {
+      const div = document.getElementById('facturas-'+mes);
+      if (div.classList.contains('hidden')) {
+        // Verificar que existan facturas para este mes
+        if (!data[mes] || data[mes].length === 0) return;
+        
+        // Ordenar facturas por número de orden
+        const facturas = data[mes].slice().sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+        
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>Nro</th>
+                <th>Empresa</th>
+                <th>Fecha</th>
+                <th>Nro Factura</th>
+                <th>Monto (Bs)</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        
+        facturas.forEach((factura, index) => {
+          // Encontrar el índice real en el array (no ordenado)
+          const realIndex = data[mes].findIndex(f => f.timestamp === factura.timestamp);
+          
+          html += `
+            <tr class="factura-row">
+              <td>${factura.nro || '-'}</td>
+              <td>${factura.empresa || '-'}</td>
+              <td>${factura.fecha || '-'}</td>
+              <td>${factura.nroFactura || '-'}</td>
+              <td>${formatCurrency(factura.monto)}</td>
+              <td>
+                <div class="actions">
+                  <button class="btn btn-info btn-sm" onclick="editFactura('${mes}', ${realIndex})">
+                    <i class="fas fa-edit"></i> Modificar
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick="showDeleteModal('${mes}', ${realIndex})">
+                    <i class="fas fa-trash"></i> Eliminar
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+        
+        html += `</tbody></table>`;
+        div.innerHTML = html;
+        div.classList.remove('hidden');
+      } else {
+        div.classList.add('hidden');
+      }
+    }
+
+    // Inicialización
+    function init() {
+      // Verificar autenticación
+      checkAuth();
+      
+      // Establecer la fecha actual por defecto en el campo de fecha
+      document.getElementById('fecha').valueAsDate = new Date();
+      
+      // Establecer el mes actual por defecto
+      const today = new Date();
+      const currentMonth = today.toISOString().slice(0, 7);
+      document.getElementById('mes').value = currentMonth;
+      selectedMonth = currentMonth;
+      
+      // Si es un mes nuevo, inicializar array vacío
+      if (selectedMonth && !data[selectedMonth]) {
+        data[selectedMonth] = [];
+      }
+      
+      const formattedMonth = formatearMes(selectedMonth);
+      document.getElementById('selected-month-text').textContent = formattedMonth;
+      document.getElementById('selected-month').classList.remove('hidden');
+      
+      // Event listeners
+      document.getElementById('loginBtn').addEventListener('click', authenticate);
+      document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          authenticate();
+        }
+      });
+      
+      document.getElementById('logoutBtn').addEventListener('click', logout);
+      
+      document.getElementById('addBtn').addEventListener('click', addFactura);
+      document.getElementById('updateBtn').addEventListener('click', updateFactura);
+      document.getElementById('cancelEditBtn').addEventListener('click', cancelEdit);
+      
+      // Actualizar el número de orden al cargar la página
+      actualizarNumeroOrden();
+      renderMeses();
+    }
+
+    // Iniciar la aplicación cuando el DOM esté listo
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
+
+
+
