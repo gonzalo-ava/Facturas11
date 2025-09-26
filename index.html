@@ -867,7 +867,7 @@
             const nombreMes = formatearMes(mes);
             const total = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
             const seisPorciento = total * 0.06;
-            const totalGeneral = total + seisPorciento;
+            const totalGeneral =  seisPorciento;
             
             const doc = new jsPDF();
             
@@ -920,7 +920,7 @@
             const nombreMes = formatearMes(mes);
             const total = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
             const seisPorciento = total * 0.06;
-            const totalGeneral = total + seisPorciento;
+            const totalGeneral = seisPorciento;
             
             let tableHTML = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" 
@@ -1017,13 +1017,12 @@
             return `${meses[parseInt(mesNum) - 1]} ${anio}`;
         }
         
-        // Formatear moneda
+        // Formatear moneda - MODIFICADO: "Bs" después del número
         function formatearMoneda(monto) {
             return new Intl.NumberFormat('es-BO', {
-                style: 'currency',
-                currency: 'BOB',
-                minimumFractionDigits: 2
-            }).format(monto);
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(monto) + ' Bs';
         }
         
         // Funciones de modales
