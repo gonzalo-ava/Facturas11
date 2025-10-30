@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="google-site-verification" content="2hbghMg_sHTSPhxlcIJ1haJpCEc1dp_fOy6qRl47WIM" />
+    <meta name="google-site-verification" content="2hbghMg_sHTSPhxlcHJ1haJpCEc1dp_fOy6qRl47WIM" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SISTEMA DE GESTION DE FACTURAS</title>
+    <title>SISTEMA DE GESTION DE FACTURAS Y TONELADAS</title>
     
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -27,6 +27,7 @@
             --warning: #f39c12;
             --light: #ecf0f1;
             --dark: #2c3e50;
+            --tonelada: #8e44ad;
         }
         
         * {
@@ -144,8 +145,6 @@
             align-items: center;
             justify-content: center;
             gap: 6px;
-            width: 100%;
-            margin-bottom: 10px;
         }
         
         .btn-primary {
@@ -178,6 +177,11 @@
             color: white;
         }
         
+        .btn-tonelada {
+            background: var(--tonelada);
+            color: white;
+        }
+        
         .btn-pendiente {
             background: var(--danger);
             color: white;
@@ -191,7 +195,26 @@
         .btn-sm {
             padding: 8px 12px;
             font-size: 14px;
+        }
+        
+        .btn-full {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .btn-auto {
             width: auto;
+        }
+        
+        /* BOTONES EN LINEA */
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .button-group .btn {
+            flex: 1;
         }
         
         /* TABLAS - OPTIMIZADA PARA MÓVIL */
@@ -224,6 +247,10 @@
         
         tr:hover {
             background: #f8f9fa;
+        }
+        
+        .tonelada-table th {
+            background: var(--tonelada);
         }
         
         /* MODALES - OPTIMIZADOS PARA MÓVIL */
@@ -350,6 +377,10 @@
             input, select {
                 font-size: 16px; /* Previene zoom en iOS */
             }
+            
+            .button-group {
+                flex-direction: column;
+            }
         }
         
         /* ESTILOS PARA PANTALLAS MUY PEQUEÑAS */
@@ -400,10 +431,6 @@
             .mes-actions {
                 justify-content: flex-end;
             }
-            
-            .btn {
-                width: auto;
-            }
         }
         
         /* MEJORA DE SCROLL EN MÓVIL */
@@ -422,7 +449,7 @@
             <label for="passwordInput">Contraseña:</label>
             <input type="password" id="passwordInput" placeholder="Ingresa la contraseña">
         </div>
-        <button class="btn btn-primary" id="btnLogin">
+        <button class="btn btn-primary btn-full" id="btnLogin">
             <i class="fas fa-sign-in-alt"></i> Ingresar
         </button>
         <div id="loginError" class="alert alert-error hidden" style="margin-top: 15px;">
@@ -432,7 +459,7 @@
     
     <!-- Sistema de Facturas (oculto inicialmente) -->
     <div id="appContainer" class="container hidden scroll-mobile">
-        <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Gestión de Facturas</h1>
+        <h1><i class="fas fa-file-invoice-dollar"></i> Sistema de Gestión de Facturas y Toneladas</h1>
         
         <!-- Mensajes de alerta -->
         <div id="alertContainer"></div>
@@ -449,8 +476,8 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label for="nro">Número de Orden</label>
-                    <input type="number" id="nro" min="1" placeholder="Ingresa el número de orden" required>
-                    <small>Define el orden de la factura (1, 2, 3, ...)</small>
+                    <input type="number" id="nro" min="1" placeholder="Se asignará automáticamente" readonly>
+                    <small>Se asigna automáticamente según la posición cronológica</small>
                 </div>
                 
                 <div class="form-group">
@@ -474,18 +501,62 @@
                 </div>
             </div>
             
-            <button class="btn btn-primary" id="btnAgregar">
-                <i class="fas fa-plus"></i> Agregar Factura
-            </button>
+            <div class="button-group">
+                <button class="btn btn-primary" id="btnAgregar">
+                    <i class="fas fa-plus"></i> Agregar Factura
+                </button>
+                <button class="btn btn-tonelada" id="btnAbrirModalTonelada">
+                    <i class="fas fa-weight-hanging"></i> Agregar Tonelada
+                </button>
+            </div>
         </div>
         
-        <!-- Lista de Facturas -->
+        <!-- Lista de Facturas y Toneladas -->
         <div class="card">
-            <h2><i class="fas fa-list"></i> Facturas Registradas</h2>
-            <div id="listaFacturas">
+            <h2><i class="fas fa-list"></i> Registros del Mes</h2>
+            <div id="listaRegistros">
                 <div class="loading">
-                    <i class="fas fa-spinner fa-spin"></i> Cargando facturas...
+                    <i class="fas fa-spinner fa-spin"></i> Cargando registros...
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Agregar Tonelada -->
+    <div id="modalTonelada" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-weight-hanging"></i> Agregar Nueva Tonelada</h3>
+            
+            <div class="form-group">
+                <label for="mesTonelada"><i class="fas fa-calendar-alt"></i> Mes</label>
+                <input type="month" id="mesTonelada" required>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nroTonelada">Número de Orden</label>
+                    <input type="number" id="nroTonelada" min="1" placeholder="Se asignará automáticamente" readonly>
+                    <small>Se asigna automáticamente según la posición cronológica</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fechaTonelada">Fecha</label>
+                    <input type="date" id="fechaTonelada" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cantidadTonelada">Cantidad (Toneladas)</label>
+                    <input type="number" id="cantidadTonelada" step="0.01" placeholder="0.00" required>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn" onclick="cerrarModal('modalTonelada')">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn btn-tonelada" id="btnAgregarTonelada">
+                    <i class="fas fa-plus"></i> Agregar Tonelada
+                </button>
             </div>
         </div>
     </div>
@@ -494,10 +565,10 @@
     <div id="modalEliminar" class="modal">
         <div class="modal-content">
             <h3><i class="fas fa-trash"></i> Confirmar Eliminación</h3>
-            <p id="modalEliminarTexto">¿Estás seguro de que deseas eliminar esta factura?</p>
+            <p id="modalEliminarTexto">¿Estás seguro de que deseas eliminar este registro?</p>
             <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn" onclick="cerrarModal('modalEliminar')" style="width: auto;">Cancelar</button>
-                <button class="btn btn-danger" id="btnConfirmarEliminar" style="width: auto;">Eliminar</button>
+                <button class="btn btn-auto" onclick="cerrarModal('modalEliminar')">Cancelar</button>
+                <button class="btn btn-danger btn-auto" id="btnConfirmarEliminar">Eliminar</button>
             </div>
         </div>
     </div>
@@ -508,8 +579,8 @@
             <h3><i class="fas fa-check-circle"></i> Confirmar Cancelación</h3>
             <p id="modalCancelacionTexto">¿Estás seguro de que este mes ha sido cancelado?</p>
             <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
-                <button class="btn" onclick="cerrarModal('modalCancelacion')" style="width: auto;">Cancelar</button>
-                <button class="btn btn-success" id="btnConfirmarCancelacion" style="width: auto;">Sí, Confirmar</button>
+                <button class="btn btn-auto" onclick="cerrarModal('modalCancelacion')">Cancelar</button>
+                <button class="btn btn-success btn-auto" id="btnConfirmarCancelacion">Sí, Confirmar</button>
             </div>
         </div>
     </div>
@@ -517,18 +588,18 @@
     <!-- Modal para Exportar -->
     <div id="modalExportar" class="modal">
         <div class="modal-content">
-            <h3><i class="fas fa-download"></i> Exportar Facturas</h3>
+            <h3><i class="fas fa-download"></i> Exportar Registros</h3>
             <p id="modalExportarTexto">Selecciona el formato para descargar:</p>
             <div style="display: flex; gap: 10px; justify-content: center; margin: 20px 0; flex-direction: column;">
-                <button class="btn btn-danger" id="btnExportarPDF">
+                <button class="btn btn-danger btn-full" id="btnExportarPDF">
                     <i class="fas fa-file-pdf"></i> Exportar a PDF
                 </button>
-                <button class="btn btn-primary" id="btnExportarWord">
+                <button class="btn btn-primary btn-full" id="btnExportarWord">
                     <i class="fas fa-file-word"></i> Exportar a Word
                 </button>
             </div>
             <div style="margin-top: 15px; text-align: center;">
-                <button class="btn" onclick="cerrarModal('modalExportar')" style="width: auto;">Cancelar</button>
+                <button class="btn btn-auto" onclick="cerrarModal('modalExportar')">Cancelar</button>
             </div>
         </div>
     </div>
@@ -563,7 +634,8 @@
         // VARIABLES GLOBALES
         // =============================================
         let facturas = [];
-        let facturaAEliminar = null;
+        let toneladas = [];
+        let registroAEliminar = null;
         let mesACancelar = null;
         let mesAExportar = null;
         const PASSWORD = "Churqui123"; // Contraseña de acceso
@@ -595,19 +667,28 @@
             // Establecer fecha actual por defecto
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fecha').value = hoy;
+            document.getElementById('fechaTonelada').value = hoy;
             
             // Establecer mes actual por defecto
             const mesActual = new Date().toISOString().slice(0, 7);
             document.getElementById('mes').value = mesActual;
+            document.getElementById('mesTonelada').value = mesActual;
             
-            // Actualizar número de orden al cambiar mes
-            document.getElementById('mes').addEventListener('change', actualizarSugerenciaNumero);
+            // Actualizar número de orden al cambiar fecha o mes
+            document.getElementById('fecha').addEventListener('change', actualizarNumeroOrden);
+            document.getElementById('mes').addEventListener('change', actualizarNumeroOrden);
+            document.getElementById('fechaTonelada').addEventListener('change', actualizarNumeroOrdenTonelada);
+            document.getElementById('mesTonelada').addEventListener('change', actualizarNumeroOrdenTonelada);
             
             // Event listeners
             document.getElementById('btnAgregar').addEventListener('click', agregarFactura);
+            document.getElementById('btnAbrirModalTonelada').addEventListener('click', function() {
+                document.getElementById('modalTonelada').style.display = 'block';
+            });
+            document.getElementById('btnAgregarTonelada').addEventListener('click', agregarTonelada);
             document.getElementById('btnConfirmarEliminar').addEventListener('click', function() {
-                if (facturaAEliminar) {
-                    eliminarFactura(facturaAEliminar);
+                if (registroAEliminar) {
+                    eliminarRegistro(registroAEliminar);
                 }
             });
             document.getElementById('btnConfirmarCancelacion').addEventListener('click', function() {
@@ -628,9 +709,11 @@
                 }
             });
             
-            // Cargar facturas al iniciar
+            // Cargar datos al iniciar
             cargarFacturas();
-            actualizarSugerenciaNumero();
+            cargarToneladas();
+            actualizarNumeroOrden();
+            actualizarNumeroOrdenTonelada();
             
             // Cerrar modales al hacer clic fuera
             window.addEventListener('click', function(event) {
@@ -642,6 +725,9 @@
                 }
                 if (event.target === document.getElementById('modalExportar')) {
                     cerrarModal('modalExportar');
+                }
+                if (event.target === document.getElementById('modalTonelada')) {
+                    cerrarModal('modalTonelada');
                 }
             });
         }
@@ -675,10 +761,6 @@
         // Cargar facturas desde Firebase
         async function cargarFacturas() {
             try {
-                const contenedor = document.getElementById('listaFacturas');
-                contenedor.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Cargando facturas...</div>';
-                
-                // Cargar facturas
                 const snapshotFacturas = await db.collection('facturas').orderBy('timestamp', 'desc').get();
                 facturas = [];
                 
@@ -686,12 +768,13 @@
                     const data = doc.data();
                     facturas.push({
                         id: doc.id,
+                        tipo: 'factura',
                         ...data
                     });
                 });
                 
                 console.log('✅ Facturas cargadas:', facturas.length);
-                mostrarFacturas();
+                mostrarRegistros();
                 
             } catch (error) {
                 console.error('❌ Error cargando facturas:', error);
@@ -699,23 +782,49 @@
             }
         }
         
-        // Mostrar facturas en la tabla
-        function mostrarFacturas() {
-            const contenedor = document.getElementById('listaFacturas');
+        // Cargar toneladas desde Firebase
+        async function cargarToneladas() {
+            try {
+                const snapshotToneladas = await db.collection('toneladas').orderBy('timestamp', 'desc').get();
+                toneladas = [];
+                
+                snapshotToneladas.forEach(doc => {
+                    const data = doc.data();
+                    toneladas.push({
+                        id: doc.id,
+                        tipo: 'tonelada',
+                        ...data
+                    });
+                });
+                
+                console.log('✅ Toneladas cargadas:', toneladas.length);
+                mostrarRegistros();
+                
+            } catch (error) {
+                console.error('❌ Error cargando toneladas:', error);
+                mostrarAlerta('Error al cargar las toneladas: ' + error.message, 'error');
+            }
+        }
+        
+        // Mostrar registros (facturas + toneladas) en tablas separadas
+        function mostrarRegistros() {
+            const contenedor = document.getElementById('listaRegistros');
             
-            if (facturas.length === 0) {
+            if (facturas.length === 0 && toneladas.length === 0) {
                 contenedor.innerHTML = `
                     <div style="text-align: center; padding: 30px; color: #666;">
                         <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 15px;"></i>
-                        <h3>No hay facturas registradas</h3>
-                        <p>Agrega tu primera factura usando el formulario superior</p>
+                        <h3>No hay registros</h3>
+                        <p>Agrega tu primer registro usando los formularios superiores</p>
                     </div>
                 `;
                 return;
             }
             
-            // Agrupar facturas por mes
+            // Agrupar registros por mes
             const facturasPorMes = {};
+            const toneladasPorMes = {};
+            
             facturas.forEach(factura => {
                 if (!facturasPorMes[factura.mes]) {
                     facturasPorMes[factura.mes] = {
@@ -726,20 +835,42 @@
                 facturasPorMes[factura.mes].facturas.push(factura);
             });
             
+            toneladas.forEach(tonelada => {
+                if (!toneladasPorMes[tonelada.mes]) {
+                    toneladasPorMes[tonelada.mes] = [];
+                }
+                toneladasPorMes[tonelada.mes].push(tonelada);
+            });
+            
             let html = '';
             
             // Ordenar meses de más reciente a más antiguo
-            const meses = Object.keys(facturasPorMes).sort().reverse();
+            const mesesFacturas = Object.keys(facturasPorMes).sort().reverse();
+            const mesesToneladas = Object.keys(toneladasPorMes).sort().reverse();
+            const todosMeses = [...new Set([...mesesFacturas, ...mesesToneladas])].sort().reverse();
             
-            meses.forEach(mes => {
-                const datosMes = facturasPorMes[mes];
-                const facturasDelMes = datosMes.facturas;
-                const total = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
-                const seisPorciento = total * 0.06;
-                const totalGeneral =  seisPorciento;
+            todosMeses.forEach(mes => {
+                const datosMes = facturasPorMes[mes] || { facturas: [], cancelado: false };
+                const facturasDelMes = datosMes.facturas || [];
+                const toneladasDelMes = toneladasPorMes[mes] || [];
                 
-                // Ordenar facturas por número de orden (ingresado por el usuario)
-                facturasDelMes.sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+                // Ordenar por fecha (más antigua primero)
+                facturasDelMes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                toneladasDelMes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                
+                // Reasignar números de orden según posición cronológica
+                facturasDelMes.forEach((factura, index) => {
+                    factura.nro = index + 1;
+                });
+                toneladasDelMes.forEach((tonelada, index) => {
+                    tonelada.nro = index + 1;
+                });
+                
+                // Calcular totales
+                const totalFacturas = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
+                const totalToneladas = toneladasDelMes.reduce((sum, tonelada) => sum + parseFloat(tonelada.cantidad), 0);
+                const seisPorciento = totalFacturas * 0.06;
+                const totalGeneral = seisPorciento;
                 
                 html += `
                     <div class="mes-group" style="margin-bottom: 25px; border: 2px solid #eee; border-radius: 10px; padding: 15px;">
@@ -765,8 +896,12 @@
                         
                         <div class="totales">
                             <div class="total-line">
-                                <span>Subtotal:</span>
-                                <span><strong>${formatearMoneda(total)}</strong></span>
+                                <span>Total Facturas:</span>
+                                <span><strong>${formatearMoneda(totalFacturas)}</strong></span>
+                            </div>
+                            <div class="total-line">
+                                <span>Total Toneladas:</span>
+                                <span><strong>${totalToneladas.toFixed(2)} Tn</strong></span>
                             </div>
                             <div class="total-line">
                                 <span>6% sobre el total:</span>
@@ -779,42 +914,95 @@
                         </div>
                         
                         <div id="detalles-${mes}" class="hidden">
-                            <div class="table-container">
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Nro</th>
-                                            <th>Empresa</th>
-                                            <th>Fecha</th>
-                                            <th>N° Factura</th>
-                                            <th>Monto (Bs)</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
                 `;
                 
-                facturasDelMes.forEach(factura => {
+                // Tabla de Toneladas (primero)
+                if (toneladasDelMes.length > 0) {
                     html += `
-                        <tr>
-                            <td>${factura.nro}</td>
-                            <td>${factura.empresa}</td>
-                            <td>${factura.fecha}</td>
-                            <td>${factura.nroFactura}</td>
-                            <td style="font-weight: bold;">${formatearMoneda(factura.monto)}</td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" onclick="confirmarEliminar('${factura.id}', '${factura.nro}', '${mes}')">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </button>
-                            </td>
-                        </tr>
+                        <h4 style="margin: 20px 0 10px 0; color: var(--tonelada);">
+                            <i class="fas fa-weight-hanging"></i> Toneladas
+                        </h4>
+                        <div class="table-container">
+                            <table class="tonelada-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nro</th>
+                                        <th>Fecha</th>
+                                        <th>Cantidad (Tn)</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                     `;
-                });
+                    
+                    toneladasDelMes.forEach(tonelada => {
+                        html += `
+                            <tr>
+                                <td>${tonelada.nro}</td>
+                                <td>${formatearFecha(tonelada.fecha)}</td>
+                                <td style="font-weight: bold;">${tonelada.cantidad}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmarEliminar('${tonelada.id}', '${tonelada.nro}', '${mes}', 'tonelada')">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
+                
+                // Tabla de Facturas (después)
+                if (facturasDelMes.length > 0) {
+                    html += `
+                        <h4 style="margin: 20px 0 10px 0; color: var(--secondary);">
+                            <i class="fas fa-file-invoice"></i> Facturas
+                        </h4>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Nro</th>
+                                        <th>Empresa</th>
+                                        <th>Fecha</th>
+                                        <th>N° Factura</th>
+                                        <th>Monto (Bs)</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    facturasDelMes.forEach(factura => {
+                        html += `
+                            <tr>
+                                <td>${factura.nro}</td>
+                                <td>${factura.empresa}</td>
+                                <td>${formatearFecha(factura.fecha)}</td>
+                                <td>${factura.nroFactura}</td>
+                                <td style="font-weight: bold;">${formatearMoneda(factura.monto)}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmarEliminar('${factura.id}', '${factura.nro}', '${mes}', 'factura')">
+                                        <i class="fas fa-trash"></i> Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                }
                 
                 html += `
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
                     </div>
                 `;
@@ -854,13 +1042,6 @@
                 return;
             }
             
-            // Verificar si ya existe una factura con el mismo número en el mismo mes
-            const existeFactura = facturas.some(f => f.mes === mes && f.nro === nro);
-            if (existeFactura) {
-                mostrarAlerta('Ya existe una factura con este número de orden en el mes seleccionado', 'error');
-                return;
-            }
-            
             try {
                 // Mostrar loading
                 const btnAgregar = document.getElementById('btnAgregar');
@@ -869,7 +1050,7 @@
                 btnAgregar.disabled = true;
                 
                 const nuevaFactura = {
-                    nro: nro,
+                    nro: parseInt(nro),
                     empresa: empresa.trim(),
                     fecha: fecha,
                     nroFactura: nroFactura.trim(),
@@ -888,8 +1069,8 @@
                 document.getElementById('nroFactura').value = '';
                 document.getElementById('monto').value = '';
                 
-                // Actualizar sugerencia de número
-                await actualizarSugerenciaNumero();
+                // Actualizar número de orden
+                await actualizarNumeroOrden();
                 
                 // Recargar lista
                 await cargarFacturas();
@@ -907,16 +1088,90 @@
             }
         }
         
-        // Eliminar factura
-        async function eliminarFactura(id) {
+        // Agregar nueva tonelada
+        async function agregarTonelada() {
+            const mes = document.getElementById('mesTonelada').value;
+            const nro = document.getElementById('nroTonelada').value;
+            const fecha = document.getElementById('fechaTonelada').value;
+            const cantidad = document.getElementById('cantidadTonelada').value;
+            
+            // Validaciones
+            if (!mes || !nro || !fecha || !cantidad) {
+                mostrarAlerta('Por favor, completa todos los campos', 'error');
+                return;
+            }
+            
+            if (parseInt(nro) <= 0) {
+                mostrarAlerta('El número de orden debe ser mayor a cero', 'error');
+                return;
+            }
+            
+            if (parseFloat(cantidad) <= 0) {
+                mostrarAlerta('La cantidad debe ser mayor a cero', 'error');
+                return;
+            }
+            
             try {
-                await db.collection('facturas').doc(id).delete();
-                await cargarFacturas();
-                cerrarModal('modalEliminar');
-                mostrarAlerta('Factura eliminada correctamente');
+                // Mostrar loading
+                const btnAgregar = document.getElementById('btnAgregarTonelada');
+                const originalText = btnAgregar.innerHTML;
+                btnAgregar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                btnAgregar.disabled = true;
+                
+                const nuevaTonelada = {
+                    nro: parseInt(nro),
+                    fecha: fecha,
+                    cantidad: parseFloat(cantidad),
+                    mes: mes,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                console.log('⚖️ Guardando tonelada:', nuevaTonelada);
+                
+                // Guardar en Firebase
+                await db.collection('toneladas').add(nuevaTonelada);
+                
+                // Limpiar formulario
+                document.getElementById('cantidadTonelada').value = '';
+                
+                // Actualizar número de orden
+                await actualizarNumeroOrdenTonelada();
+                
+                // Recargar lista
+                await cargarToneladas();
+                
+                // Cerrar modal
+                cerrarModal('modalTonelada');
+                
+                mostrarAlerta('Tonelada agregada correctamente!');
+                
             } catch (error) {
-                console.error('❌ Error eliminando factura:', error);
-                mostrarAlerta('Error al eliminar la factura: ' + error.message, 'error');
+                console.error('❌ Error agregando tonelada:', error);
+                mostrarAlerta('Error al agregar la tonelada: ' + error.message, 'error');
+            } finally {
+                // Restaurar botón
+                const btnAgregar = document.getElementById('btnAgregarTonelada');
+                btnAgregar.innerHTML = '<i class="fas fa-plus"></i> Agregar Tonelada';
+                btnAgregar.disabled = false;
+            }
+        }
+        
+        // Eliminar registro (factura o tonelada)
+        async function eliminarRegistro(datos) {
+            try {
+                const { id, tipo } = datos;
+                if (tipo === 'factura') {
+                    await db.collection('facturas').doc(id).delete();
+                    await cargarFacturas();
+                } else {
+                    await db.collection('toneladas').doc(id).delete();
+                    await cargarToneladas();
+                }
+                cerrarModal('modalEliminar');
+                mostrarAlerta('Registro eliminado correctamente');
+            } catch (error) {
+                console.error('❌ Error eliminando registro:', error);
+                mostrarAlerta('Error al eliminar el registro: ' + error.message, 'error');
             }
         }
         
@@ -929,6 +1184,7 @@
                 cerrarModal('modalCancelacion');
                 // Recargar para mostrar el cambio
                 await cargarFacturas();
+                await cargarToneladas();
             } catch (error) {
                 console.error('❌ Error cancelando mes:', error);
                 mostrarAlerta('Error al cancelar el mes: ' + error.message, 'error');
@@ -943,69 +1199,109 @@
         function mostrarModalExportar(mes) {
             mesAExportar = mes;
             document.getElementById('modalExportarTexto').textContent = 
-                `Exportar facturas de ${formatearMes(mes)}`;
+                `Exportar registros de ${formatearMes(mes)}`;
             document.getElementById('modalExportar').style.display = 'block';
         }
         
         // Exportar a PDF
         function exportarAPDF(mes) {
-            const facturasDelMes = facturas.filter(f => f.mes === mes).sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+            const facturasDelMes = facturas.filter(f => f.mes === mes).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            const toneladasDelMes = toneladas.filter(t => t.mes === mes).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            
             const nombreMes = formatearMes(mes);
-            const total = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
-            const seisPorciento = total * 0.06;
+            const totalFacturas = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
+            const totalToneladas = toneladasDelMes.reduce((sum, tonelada) => sum + parseFloat(tonelada.cantidad), 0);
+            const seisPorciento = totalFacturas * 0.06;
             const totalGeneral =  seisPorciento;
             
             const doc = new jsPDF();
             
             // Título
             doc.setFontSize(18);
-            doc.text(`Facturas del Mes: ${nombreMes}`, 14, 15);
+            doc.text(`Registros del Mes: ${nombreMes}`, 14, 15);
             
-            // Tabla de facturas
-            const tableColumn = ["Nro", "Empresa", "Fecha", "N° Factura", "Monto (Bs)"];
-            const tableRows = [];
+            // Tabla de Toneladas
+            if (toneladasDelMes.length > 0) {
+                doc.setFontSize(14);
+                doc.text('Toneladas:', 14, 30);
+                
+                const tableColumnToneladas = ["Nro", "Fecha", "Cantidad (Tn)"];
+                const tableRowsToneladas = [];
+                
+                toneladasDelMes.forEach((tonelada, index) => {
+                    const toneladaData = [
+                        index + 1,
+                        formatearFecha(tonelada.fecha),
+                        tonelada.cantidad
+                    ];
+                    tableRowsToneladas.push(toneladaData);
+                });
+                
+                doc.autoTable({
+                    head: [tableColumnToneladas],
+                    body: tableRowsToneladas,
+                    startY: 35,
+                    theme: 'grid',
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [142, 68, 173] }
+                });
+            }
             
-            facturasDelMes.forEach(factura => {
-                const facturaData = [
-                    factura.nro,
-                    factura.empresa,
-                    factura.fecha,
-                    factura.nroFactura,
-                    formatearMoneda(factura.monto)
-                ];
-                tableRows.push(facturaData);
-            });
+            // Tabla de Facturas
+            let startY = toneladasDelMes.length > 0 ? doc.lastAutoTable.finalY + 10 : 35;
             
-            // Añadir tabla
-            doc.autoTable({
-                head: [tableColumn],
-                body: tableRows,
-                startY: 25,
-                theme: 'grid',
-                styles: { fontSize: 10 },
-                headStyles: { fillColor: [44, 62, 80] }
-            });
+            if (facturasDelMes.length > 0) {
+                doc.setFontSize(14);
+                doc.text('Facturas:', 14, startY);
+                
+                const tableColumnFacturas = ["Nro", "Empresa", "Fecha", "N° Factura", "Monto (Bs)"];
+                const tableRowsFacturas = [];
+                
+                facturasDelMes.forEach((factura, index) => {
+                    const facturaData = [
+                        index + 1,
+                        factura.empresa,
+                        formatearFecha(factura.fecha),
+                        factura.nroFactura,
+                        formatearMoneda(factura.monto)
+                    ];
+                    tableRowsFacturas.push(facturaData);
+                });
+                
+                doc.autoTable({
+                    head: [tableColumnFacturas],
+                    body: tableRowsFacturas,
+                    startY: startY + 5,
+                    theme: 'grid',
+                    styles: { fontSize: 10 },
+                    headStyles: { fillColor: [44, 62, 80] }
+                });
+            }
             
-            // Añadir totales
-            const finalY = doc.lastAutoTable.finalY + 10;
+            // Añadir totales - TONELADAS PRIMERO
+            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : startY + 10;
             doc.setFontSize(12);
-            doc.text(`Subtotal: ${formatearMoneda(total)}`, 14, finalY);
-            doc.text(`6% sobre el total: ${formatearMoneda(seisPorciento)}`, 14, finalY + 10);
+            doc.text(`Total Toneladas: ${totalToneladas.toFixed(2)} Tn`, 14, finalY);
+            doc.text(`Total Facturas: ${formatearMoneda(totalFacturas)}`, 14, finalY + 10);
+            doc.text(`6% sobre el total: ${formatearMoneda(seisPorciento)}`, 14, finalY + 20);
             doc.setFontSize(14);
-            doc.text(`TOTAL GENERAL: ${formatearMoneda(totalGeneral)}`, 14, finalY + 25);
+            doc.text(`TOTAL GENERAL: ${formatearMoneda(totalGeneral)}`, 14, finalY + 35);
             
             // Guardar PDF
-            doc.save(`facturas_${mes}.pdf`);
+            doc.save(`registros_${mes}.pdf`);
             mostrarAlerta('PDF generado correctamente');
             cerrarModal('modalExportar');
         }
         
         // Exportar a Word
         function exportarAWord(mes) {
-            const facturasDelMes = facturas.filter(f => f.mes === mes).sort((a, b) => parseInt(a.nro) - parseInt(b.nro));
+            const facturasDelMes = facturas.filter(f => f.mes === mes).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            const toneladasDelMes = toneladas.filter(t => t.mes === mes).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            
             const nombreMes = formatearMes(mes);
-            const total = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
-            const seisPorciento = total * 0.06;
+            const totalFacturas = facturasDelMes.reduce((sum, factura) => sum + parseFloat(factura.monto), 0);
+            const totalToneladas = toneladasDelMes.reduce((sum, tonelada) => sum + parseFloat(tonelada.cantidad), 0);
+            const seisPorciento = totalFacturas * 0.06;
             const totalGeneral = seisPorciento;
             
             let tableHTML = `
@@ -1014,18 +1310,51 @@
                       xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                     <meta charset="utf-8">
-                    <title>Facturas ${nombreMes}</title>
+                    <title>Registros ${nombreMes}</title>
                     <style>
                         body { font-family: Arial, sans-serif; }
-                        table { border-collapse: collapse; width: 100%; }
+                        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
                         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                        th { background-color: #2c3e50; color: white; }
+                        .tonelada th { background-color: #8e44ad; color: white; }
+                        .factura th { background-color: #2c3e50; color: white; }
                         .total { font-weight: bold; margin-top: 20px; }
+                        h2 { color: #2c3e50; }
                     </style>
                 </head>
                 <body>
-                    <h1>Facturas del Mes: ${nombreMes}</h1>
-                    <table>
+                    <h1>Registros del Mes: ${nombreMes}</h1>
+            `;
+            
+            // Tabla de Toneladas
+            if (toneladasDelMes.length > 0) {
+                tableHTML += `
+                    <h2>Toneladas</h2>
+                    <table class="tonelada">
+                        <tr>
+                            <th>Nro</th>
+                            <th>Fecha</th>
+                            <th>Cantidad (Tn)</th>
+                        </tr>
+                `;
+                
+                toneladasDelMes.forEach((tonelada, index) => {
+                    tableHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${formatearFecha(tonelada.fecha)}</td>
+                            <td>${tonelada.cantidad}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `</table>`;
+            }
+            
+            // Tabla de Facturas
+            if (facturasDelMes.length > 0) {
+                tableHTML += `
+                    <h2>Facturas</h2>
+                    <table class="factura">
                         <tr>
                             <th>Nro</th>
                             <th>Empresa</th>
@@ -1033,24 +1362,28 @@
                             <th>N° Factura</th>
                             <th>Monto (Bs)</th>
                         </tr>
-            `;
-            
-            facturasDelMes.forEach(factura => {
-                tableHTML += `
-                    <tr>
-                        <td>${factura.nro}</td>
-                        <td>${factura.empresa}</td>
-                        <td>${factura.fecha}</td>
-                        <td>${factura.nroFactura}</td>
-                        <td>${formatearMoneda(factura.monto)}</td>
-                    </tr>
                 `;
-            });
+                
+                facturasDelMes.forEach((factura, index) => {
+                    tableHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${factura.empresa}</td>
+                            <td>${formatearFecha(factura.fecha)}</td>
+                            <td>${factura.nroFactura}</td>
+                            <td>${formatearMoneda(factura.monto)}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `</table>`;
+            }
             
+            // Totales - TONELADAS PRIMERO
             tableHTML += `
-                    </table>
                     <div class="total">
-                        <p>Subtotal: ${formatearMoneda(total)}</p>
+                        <p>Total Toneladas: ${totalToneladas.toFixed(2)} Tn</p>
+                        <p>Total Facturas: ${formatearMoneda(totalFacturas)}</p>
                         <p>6% sobre el total: ${formatearMoneda(seisPorciento)}</p>
                         <p><strong>TOTAL GENERAL: ${formatearMoneda(totalGeneral)}</strong></p>
                     </div>
@@ -1063,7 +1396,7 @@
             const link = document.createElement('a');
             
             link.href = URL.createObjectURL(blob);
-            link.download = `facturas_${mes}.doc`;
+            link.download = `registros_${mes}.doc`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -1075,22 +1408,76 @@
         // FUNCIONES UTILITARIAS
         // =============================================
         
-        // Actualizar sugerencia de número de orden
-        async function actualizarSugerenciaNumero() {
+        // Actualizar número de orden automáticamente para facturas
+        async function actualizarNumeroOrden() {
             const mes = document.getElementById('mes').value;
-            if (mes) {
-                // Obtener el siguiente número disponible para este mes
+            const fecha = document.getElementById('fecha').value;
+            
+            if (mes && fecha) {
+                // Obtener facturas del mes seleccionado
                 const facturasDelMes = facturas.filter(f => f.mes === mes);
-                let siguienteNro = 1;
                 
                 if (facturasDelMes.length > 0) {
-                    // Encontrar el número más alto y sumar 1
-                    const numeros = facturasDelMes.map(f => parseInt(f.nro));
-                    siguienteNro = Math.max(...numeros) + 1;
+                    // Ordenar por fecha (más antigua primero)
+                    facturasDelMes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                    
+                    // Encontrar la posición donde insertar la nueva factura
+                    const fechaNueva = new Date(fecha);
+                    let posicion = 1;
+                    
+                    for (let i = 0; i < facturasDelMes.length; i++) {
+                        const fechaExistente = new Date(facturasDelMes[i].fecha);
+                        if (fechaNueva < fechaExistente) {
+                            break;
+                        }
+                        posicion = i + 2; // +2 porque empieza en 1 y sumamos 1 más
+                    }
+                    
+                    document.getElementById('nro').value = posicion;
+                } else {
+                    // Si no hay facturas en este mes, empezar desde 1
+                    document.getElementById('nro').value = 1;
                 }
-                
-                document.getElementById('nro').value = siguienteNro;
             }
+        }
+        
+        // Actualizar número de orden automáticamente para toneladas
+        async function actualizarNumeroOrdenTonelada() {
+            const mes = document.getElementById('mesTonelada').value;
+            const fecha = document.getElementById('fechaTonelada').value;
+            
+            if (mes && fecha) {
+                // Obtener toneladas del mes seleccionado
+                const toneladasDelMes = toneladas.filter(t => t.mes === mes);
+                
+                if (toneladasDelMes.length > 0) {
+                    // Ordenar por fecha (más antigua primero)
+                    toneladasDelMes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+                    
+                    // Encontrar la posición donde insertar la nueva tonelada
+                    const fechaNueva = new Date(fecha);
+                    let posicion = 1;
+                    
+                    for (let i = 0; i < toneladasDelMes.length; i++) {
+                        const fechaExistente = new Date(toneladasDelMes[i].fecha);
+                        if (fechaNueva < fechaExistente) {
+                            break;
+                        }
+                        posicion = i + 2; // +2 porque empieza en 1 y sumamos 1 más
+                    }
+                    
+                    document.getElementById('nroTonelada').value = posicion;
+                } else {
+                    // Si no hay toneladas en este mes, empezar desde 1
+                    document.getElementById('nroTonelada').value = 1;
+                }
+            }
+        }
+        
+        // Formatear fecha (ej: "2024-01-15" -> "15/01/2024")
+        function formatearFecha(fecha) {
+            const [anio, mes, dia] = fecha.split('-');
+            return `${dia}/${mes}/${anio}`;
         }
         
         // Formatear mes (ej: "2024-01" -> "Enero 2024")
@@ -1108,14 +1495,15 @@
             return new Intl.NumberFormat('es-BO', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
-            }).format(monto) + ' Bs';
+            }).format(monto) + '.-';
         }
         
         // Funciones de modales
-        function confirmarEliminar(id, nro, mes) {
-            facturaAEliminar = id;
+        function confirmarEliminar(id, nro, mes, tipo) {
+            registroAEliminar = { id, tipo };
+            const tipoTexto = tipo === 'tonelada' ? 'tonelada' : 'factura';
             document.getElementById('modalEliminarTexto').textContent = 
-                `¿Estás seguro de que deseas eliminar la factura #${nro} del mes ${formatearMes(mes)}?`;
+                `¿Estás seguro de que deseas eliminar la ${tipoTexto} #${nro} del mes ${formatearMes(mes)}?`;
             document.getElementById('modalEliminar').style.display = 'block';
         }
         
@@ -1128,9 +1516,11 @@
         
         function cerrarModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
-            if (modalId === 'modalEliminar') facturaAEliminar = null;
-            if (modalId === 'modalCancelacion') mesACancelar = null;
-            if (modalId === 'modalExportar') mesAExportar = null;
+            if (modalId === 'modalEliminar') registroAEliminar = null;
+            if (modalId === 'modalTonelada') {
+                // Limpiar formulario al cerrar
+                document.getElementById('cantidadTonelada').value = '';
+            }
         }
         
         // =============================================
@@ -1163,8 +1553,4 @@
     </script>
 </body>
 </html>
-
-
-
-
 
