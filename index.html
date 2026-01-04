@@ -652,6 +652,9 @@
         let mesAExportar = null;
         const PASSWORD = "Churqui123"; // Contraseña de acceso
         
+        // Variable para almacenar meses cancelados en localStorage
+        let mesesCancelados = {};
+        
         // =============================================
         // FUNCIONES DE AUTENTICACIÓN
         // =============================================
@@ -676,6 +679,9 @@
         
         // Inicializar la aplicación después del login
         function inicializarAplicacion() {
+            // Cargar meses cancelados desde localStorage
+            cargarMesesCanceladosDesdeLocalStorage();
+            
             // Establecer fecha actual por defecto
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fecha').value = hoy;
@@ -742,6 +748,49 @@
                     cerrarModal('modalTonelada');
                 }
             });
+        }
+        
+        // =============================================
+        // FUNCIONES PARA MESES CANCELADOS (LOCALSTORAGE)
+        // =============================================
+        
+        function cargarMesesCanceladosDesdeLocalStorage() {
+            try {
+                const datosGuardados = localStorage.getItem('mesesCancelados');
+                if (datosGuardados) {
+                    mesesCancelados = JSON.parse(datosGuardados);
+                    console.log('✅ Meses cancelados cargados desde localStorage:', mesesCancelados);
+                } else {
+                    mesesCancelados = {};
+                }
+            } catch (error) {
+                console.error('❌ Error cargando meses cancelados:', error);
+                mesesCancelados = {};
+            }
+        }
+        
+        function guardarMesCanceladoEnLocalStorage(mes) {
+            try {
+                mesesCancelados[mes] = true;
+                localStorage.setItem('mesesCancelados', JSON.stringify(mesesCancelados));
+                console.log('💾 Mes guardado como cancelado:', mes);
+            } catch (error) {
+                console.error('❌ Error guardando mes cancelado:', error);
+            }
+        }
+        
+        function eliminarMesCanceladoDeLocalStorage(mes) {
+            try {
+                delete mesesCancelados[mes];
+                localStorage.setItem('mesesCancelados', JSON.stringify(mesesCancelados));
+                console.log('🗑️ Mes eliminado de cancelados:', mes);
+            } catch (error) {
+                console.error('❌ Error eliminando mes cancelado:', error);
+            }
+        }
+        
+        function estaMesCancelado(mes) {
+            return mesesCancelados[mes] === true;
         }
         
         // =============================================
@@ -841,7 +890,7 @@
                 if (!facturasPorMes[factura.mes]) {
                     facturasPorMes[factura.mes] = {
                         facturas: [],
-                        cancelado: false
+                        cancelado: estaMesCancelado(factura.mes) // Usamos localStorage
                     };
                 }
                 facturasPorMes[factura.mes].facturas.push(factura);
@@ -862,9 +911,10 @@
             const todosMeses = [...new Set([...mesesFacturas, ...mesesToneladas])].sort().reverse();
             
             todosMeses.forEach(mes => {
-                const datosMes = facturasPorMes[mes] || { facturas: [], cancelado: false };
+                const datosMes = facturasPorMes[mes] || { facturas: [], cancelado: estaMesCancelado(mes) };
                 const facturasDelMes = datosMes.facturas || [];
                 const toneladasDelMes = toneladasPorMes[mes] || [];
+                const cancelado = datosMes.cancelado;
                 
                 // Ordenar por fecha (más antigua primero)
                 facturasDelMes.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
@@ -889,7 +939,7 @@
                         <div class="mes-header">
                             <h3 class="mes-title">${formatearMes(mes)}</h3>
                             <div class="mes-actions">
-                                ${datosMes.cancelado ? 
+                                ${cancelado ? 
                                     `<button class="btn btn-cancelado btn-sm" disabled>
                                         <i class="fas fa-check-circle"></i> Cancelado
                                     </button>` : 
@@ -1187,16 +1237,18 @@
             }
         }
         
-        // Marcar mes como cancelado
+        // Marcar mes como cancelado (SOLUCIÓN MEJORADA)
         async function cancelarMes(mes) {
             try {
-                // En una implementación real, aquí guardarías el estado en Firebase
-                // Por ahora solo cambiamos el estado localmente
+                // Guardar en localStorage
+                guardarMesCanceladoEnLocalStorage(mes);
+                
+                // Actualizar la UI sin recargar toda la página
+                mostrarRegistros();
+                
                 mostrarAlerta(`El mes ${formatearMes(mes)} ha sido marcado como cancelado`);
                 cerrarModal('modalCancelacion');
-                // Recargar para mostrar el cambio
-                await cargarFacturas();
-                await cargarToneladas();
+                
             } catch (error) {
                 console.error('❌ Error cancelando mes:', error);
                 mostrarAlerta('Error al cancelar el mes: ' + error.message, 'error');
@@ -1565,6 +1617,7 @@
     </script>
 </body>
 </html>
+
 
 
 
